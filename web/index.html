@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#f5f3ec" />
+    <title>Mon cerveau</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="stylesheet" href="style.css" />
+    <script defer src="app.js"></script>
+  </head>
+  <body>
+    <header class="top">
+      <div class="top-inner">
+        <a class="brand" href="#inbox" aria-label="Mon cerveau, accueil"
+          ><svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true">
+            <rect x="2" y="2" width="44" height="44" rx="12" fill="#143d32" />
+            <rect x="2.75" y="2.75" width="42.5" height="42.5" rx="11.25" fill="none" stroke="#285b4a" stroke-width="1.5" />
+            <polygon points="24,11.5 36.5,18 24,24.5 11.5,18" fill="#f7f4ec" />
+            <polyline points="12,24.5 24,30.8 36,24.5" fill="none" stroke="#dce9bb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+            <polyline points="12,30.8 24,37.1 36,30.8" fill="none" stroke="#7aa88c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="36.5" cy="11.8" r="3.3" fill="#f48642" /></svg
+          >Mon cerveau</a
+        >
+        <div class="top-tools">
+          <label class="search"
+            ><span data-icon="search"></span
+            ><input
+              id="query"
+              type="search"
+              placeholder="Rechercher"
+              aria-label="Rechercher dans tous les éléments"
+            /><kbd>/</kbd></label
+          ><button
+            id="theme-toggle"
+            class="icon-button"
+            type="button"
+            aria-label="Changer le thème clair ou sombre"
+            title="Thème clair / sombre (t)"
+          >
+            <span data-icon="moon" id="theme-icon"></span></button
+          ><button
+            id="shortcuts-btn"
+            class="icon-button"
+            type="button"
+            aria-label="Raccourcis clavier"
+            title="Raccourcis clavier (?)"
+          >
+            <span data-icon="help"></span></button
+          ><button id="settings" class="icon-button" aria-label="Réglages" title="Réglages">
+            <span data-icon="settings"></span>
+          </button>
+        </div>
+      </div>
+    </header>
+    <div class="layout">
+      <nav class="nav" aria-label="Vues">
+        <div id="navigation"></div>
+        <button id="sync" hidden><span data-icon="sync"></span><span>Synchroniser</span></button
+        ><small id="sync-status" role="status"></small>
+      </nav>
+      <main>
+        <div class="heading">
+          <div class="date" id="today"></div>
+          <h1 id="heading">Boîte de réception</h1>
+        </div>
+        <section id="composer" class="composer" aria-label="Capture rapide">
+          <label for="capture">Capture rapide</label>
+          <textarea
+            id="capture"
+            rows="2"
+            placeholder="Une idée, une tâche, un lien…"
+            maxlength="65535"
+          ></textarea>
+          <div class="capture-bar">
+            <button id="record" class="soft">
+              <span data-icon="mic"></span><span id="record-text">Mémo vocal</span></button
+            ><button id="capture-save" class="primary">
+              <span data-icon="plus"></span>Enregistrer
+            </button>
+          </div>
+          <div id="audio-preview" hidden></div>
+        </section>
+        <section id="calendar" hidden aria-label="Calendrier">
+          <div class="month-nav">
+            <button id="prev" class="icon-button" aria-label="Mois précédent">
+              <span data-icon="left"></span>
+            </button>
+            <h2 id="month"></h2>
+            <button id="next" class="icon-button" aria-label="Mois suivant">
+              <span data-icon="right"></span>
+            </button>
+          </div>
+          <div id="month-grid" class="month-grid"></div>
+          <button id="reset-day" class="text-button" hidden>Afficher tout le mois</button>
+        </section>
+        <div class="section-head">
+          <h2 id="list-title">Derniers éléments</h2>
+          <button id="create" class="soft" hidden><span data-icon="plus"></span>Ajouter</button>
+        </div>
+        <div id="items" aria-live="polite"></div>
+      </main>
+      <aside>
+        <section class="focus">
+          <div class="focus-icon"><span data-icon="pin"></span></div>
+          <h2>Reprendre</h2>
+          <div id="focus"></div>
+        </section>
+        <section class="upcoming">
+          <div class="section-head">
+            <h2>Prochain rendez-vous</h2>
+            <span data-icon="event"></span>
+          </div>
+          <div id="upcoming"></div>
+        </section>
+      </aside>
+    </div>
+    <dialog id="editor">
+      <form id="edit-form">
+        <div class="dialog-head">
+          <h2 id="edit-heading">Modifier</h2>
+          <div class="dialog-tools">
+            <button
+              type="button"
+              id="copy-md"
+              class="soft compact"
+              title="Copier cette fiche en Markdown"
+            >
+              <span data-icon="copy"></span><span>Markdown</span>
+            </button>
+            <button class="icon-button" type="button" data-close aria-label="Fermer">
+              <span data-icon="close"></span>
+            </button>
+          </div>
+        </div>
+        <div id="review-triage" class="triage-bar" hidden>
+          <span class="triage-label">Validation rapide</span>
+          <div class="triage-actions">
+            <button type="button" class="soft compact" data-triage="task">Passer en tâche</button>
+            <button type="button" class="soft compact" data-triage="note">Garder en note</button>
+          </div>
+        </div>
+        <label
+          >Type<select id="kind">
+            <option value="note">Note</option>
+            <option value="task">Tâche</option>
+            <option value="event">Rendez-vous</option>
+            <option value="review">À confirmer</option>
+          </select></label
+        >
+        <label>Titre<input id="title" required maxlength="300" /></label>
+        <label id="time-label">Date et heure<input type="datetime-local" id="when" /></label>
+        <label><span id="body-label">Contenu</span><textarea id="body" rows="3"></textarea></label>
+        <div id="source"></div>
+        <div id="media"></div>
+        <div id="links"></div>
+        <section id="annotations-box" class="annotations-box">
+          <div class="annotations-head">
+            <h3>Annotations</h3>
+            <span id="annotations-count" class="counter" hidden></span>
+          </div>
+          <div id="annotations-list" class="annotations-list"></div>
+          <div class="annotation-form">
+            <input
+              id="annotation-input"
+              type="text"
+              maxlength="4000"
+              placeholder="Ajouter une annotation de suivi ou un contexte…"
+              aria-label="Nouvelle annotation"
+            />
+            <button type="button" id="annotation-add" class="soft compact">Annoter</button>
+          </div>
+        </section>
+        <details id="history-box" class="source" hidden>
+          <summary id="history-summary">Historique des révisions</summary>
+          <div id="history-list" class="history-list"></div>
+        </details>
+        <button type="button" id="analyze" hidden class="soft">
+          <span data-icon="send"></span><span id="analyze-label">Analyser ce message…</span>
+        </button>
+        <div id="analysis-result" class="analysis" hidden></div>
+        <label id="pin-field" class="check"
+          ><input id="pinned" type="checkbox" />Épingler dans « Reprendre »</label
+        >
+        <div class="actions">
+          <button type="button" id="remove" class="text-button danger">Supprimer</button
+          ><button class="primary" id="commit" type="submit">Enregistrer</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="shortcuts" aria-labelledby="shortcuts-heading">
+      <div class="dialog-head">
+        <h2 id="shortcuts-heading">Raccourcis clavier</h2>
+        <button type="button" class="icon-button" data-close aria-label="Fermer">
+          <span data-icon="close"></span>
+        </button>
+      </div>
+      <div class="shortcut-grid">
+        <div><span class="shortcut-keys"><kbd>n</kbd></span><span>Nouvelle capture rapide</span></div>
+        <div><span class="shortcut-keys"><kbd>/</kbd></span><span>Rechercher dans tous les éléments</span></div>
+        <div><span class="shortcut-keys"><kbd>j</kbd> / <kbd>k</kbd></span><span>Parcourir la liste</span></div>
+        <div><span class="shortcut-keys"><kbd>Entrée</kbd></span><span>Ouvrir l’élément sélectionné</span></div>
+        <div><span class="shortcut-keys"><kbd>1</kbd> – <kbd>5</kbd></span><span>Changer de vue (Réception → À confirmer)</span></div>
+        <div><span class="shortcut-keys"><kbd>t</kbd></span><span>Basculer le thème clair / sombre</span></div>
+        <div><span class="shortcut-keys"><kbd>Ctrl</kbd> + <kbd>Entrée</kbd></span><span>Enregistrer la capture rapide</span></div>
+        <div><span class="shortcut-keys"><kbd>?</kbd></span><span>Afficher cette aide</span></div>
+        <div><span class="shortcut-keys"><kbd>Échap</kbd></span><span>Fermer la fenêtre ouverte</span></div>
+      </div>
+    </dialog>
+    <dialog id="pairing" aria-labelledby="pair-heading">
+      <div class="dialog-head">
+        <h2 id="pair-heading">Associer le téléphone</h2>
+        <button type="button" class="icon-button" data-close aria-label="Fermer">
+          <span data-icon="close"></span>
+        </button>
+      </div>
+      <p>
+        Connectez le téléphone au même Wi-Fi que le PC. Le code autorise le téléphone à lire et modifier les
+        éléments de Mon cerveau.
+      </p>
+      <button type="button" id="pair-generate" class="primary">Créer un code d’association</button>
+      <div id="pair-instructions" hidden>
+        <img id="pair-qr" hidden alt="Code QR d’association au PC" />
+        <p id="pair-help"></p>
+        <details id="pair-details">
+          <summary>Afficher le code texte</summary>
+          <textarea
+            id="pair-code"
+            aria-label="Code d’association"
+            readonly
+            rows="4"
+            spellcheck="false"
+          ></textarea>
+          <button type="button" id="pair-copy" class="soft">Copier le code</button>
+        </details>
+        <p class="muted">
+          Gardez ce code entre vos appareils. Il reste valide après la fermeture de cette fenêtre.
+        </p>
+      </div>
+    </dialog>
+    <dialog id="consent">
+      <div class="dialog-head">
+        <h2 id="consent-title">Confirmer cette analyse ?</h2>
+        <button class="icon-button" data-close aria-label="Fermer">
+          <span data-icon="close"></span>
+        </button>
+      </div>
+      <p id="destination"></p>
+      <pre id="payload"></pre>
+      <div class="actions">
+        <button data-close class="soft">Annuler</button
+        ><button id="send" class="primary">Analyser ce message</button>
+      </div>
+    </dialog>
+    <dialog id="confirm-delete">
+      <h2>Supprimer cet élément ?</h2>
+      <p id="delete-title"></p>
+      <div class="actions">
+        <button data-close class="soft">Annuler</button
+        ><button id="delete-yes" class="primary">Supprimer</button>
+      </div>
+    </dialog>
+    <div id="status" role="status" hidden></div>
+  </body>
+</html>

@@ -1,0 +1,49 @@
+# Mon cerveau — proposition pour Bastien, 18 novembre 2026
+
+**Premier objectif** — Pouvoir partager un lien ou enregistrer une idée quand elle arrive, puis rouvrir l’application sur le PC et savoir par quoi reprendre. La première version repart de zéro. Son succès se mesure sur ce trajet quotidien.
+
+## Ce qui fonde ce plan
+
+| Source et date | Ce qu’elle permet de retenir |
+| --- | --- |
+| [README du projet](README.md), consulté le 18/11/2026, et demande de cadrage du même jour | Une application PC et Android pour idées, notes, tâches et RDV, trois modes de capture, accès local pour les agents. Les RDV sont dispersés. Le fournisseur d’agenda reste à choisir. Le dépôt Git reste local. |
+| [Synthèse Egg8Year, section « Mon cerveau »](../egg8year/docs/ETAT.md), 16/11/2026 | La synthèse attribue aux échanges des 12 et 13 mars une PWA React avec Firebase, matrice d’Eisenhower, Pomodoro et statistiques. Elle signale une ancienne clé publiée. L’état actuel du service et des accès reste inconnu. |
+| [Index Svarmo](../svarmo/sources/claude-ai/INDEX-conversations.md), import partiel du 16/11/2026 | Le 29/09, Bastien évoque la capture d’idées et dit qu’il n’utilise pas la PWA. Les titres du 30/09 évoquent mémo vocal, permissions des agents et recentrage du cahier des charges. L’index ne donne ni les arbitrages finaux ni la raison de l’abandon. |
+
+Bastien précise aujourd’hui que l’ancienne application n’a jamais servi. Les besoins confirmés priment sur ses anciens onglets. Les propositions ci-dessous répondent à deux difficultés exprimées, garder une idée sans interrompre l’activité en cours et retrouver le fil d’un projet inachevé.
+
+## Le parcours quotidien
+
+- **Capturer.** Depuis l’accueil, écrire ou toucher le micro. Depuis une autre application Android, choisir « Partager → Mon cerveau » pour un texte ou une URL. Une confirmation suit l’enregistrement sur l’appareil. Aucun titre, projet ou classement à fournir. Le mémo reste écoutable pendant la transcription. Une fois prêt, le texte est lisible et recherchable sur le PC.
+- **Retrouver.** L’accueil réunit « Reprendre » et la boîte de réception. Une même liste propose les filtres Notes, Tâches et RDV. Une capture commence comme note. En un geste, en faire une tâche ou commencer un RDV dont on confirme la date et l’heure. Le contenu d’origine reste attaché.
+- **Finir.** Épingler une seule tâche et écrire son prochain geste concret, par exemple « relire le dernier paragraphe ». À la prochaine ouverture, « Reprendre » affiche ce geste. « Terminé » clôt la tâche. Le reste peut attendre dans la boîte de réception.
+
+## Architecture proposée
+
+Une application installable à interface commune (Flutter proposé), avec intégration Android du partage et du micro. Sur le PC, un petit service conserve notes, tâches, RDV et versions dans SQLite et les fichiers audio dans un répertoire de données hors Git. Le téléphone garde une copie locale et une file persistante. Le Pixel traite localement les messages dès leur réception et affiche les rendez-vous identifiés même si le PC est éteint. Pour une date relative comme « demain », utiliser la date de réception du message. Pour un RDV daté et horodaté, le Pixel programme un rappel local 30 minutes avant par défaut. Tester PC éteint avec un RDV prévu dans 35 minutes : vérifier que le Pixel avertit cinq minutes plus tard. Si le RDV est déplacé ou annulé, vérifier que l’ancienne alerte est supprimée. Sur le Wi-Fi de confiance, après appairage et via une connexion chiffrée, il envoie les changements au service PC et récupère les nouveautés. Chaque capture reçoit dès sa création un identifiant stable. Le PC accuse réception après écriture du contenu et de son éventuel audio. En cas de coupure, le téléphone reprend sans doublon. L’état « En attente du PC » reste visible.
+
+Le service PC relie les RDV à **un agenda choisi par Bastien** au moyen d’un connecteur bidirectionnel (CalDAV si le compte le propose, sinon API du fournisseur). Il conserve identifiant distant et version, transmet créations, modifications et suppressions, et relève les changements distants. Deux modifications concurrentes du même RDV déclenchent un choix entre les versions. PC éteint, la synchronisation attend son retour. Seuls les RDV du calendrier sélectionné passent par le fournisseur.
+
+**Agents et sauvegarde.** Orca et les autres agents interrogent le service via une commande locale pour chercher, lire ou proposer une modification sur un identifiant. Par défaut, lecture seule. Bastien peut autoriser l’écriture par agent, avec contrôle de version et historique des changements. Les identifiants de connexion restent dans le coffre du système. Prévoir une sauvegarde quotidienne chiffrée sur un second support, avec instantané SQLite cohérent et pièces jointes correspondantes. Vérifier la restauration dans un profil isolé, synchronisation désactivée, en rouvrant une note, un audio et un RDV.
+
+## Développement après validation, avec critères de passage
+
+**Premier essai demandé par Bastien — les trois parcours ensemble.** Utiliser une idée dictée, un SMS, un message WhatsApp et un e-mail de confirmation fictifs. PC éteint, vérifier sur le Pixel les RDV issus des messages à date certaine et le passage dans « À confirmer » pour une date ambiguë. Vérifier le rappel 30 minutes avant un RDV confirmé. Au retour sur le Wi-Fi avec le PC allumé, retrouver les mêmes éléments sans doublon, rechercher un mot de la dictée et réécouter le mémo. Consigner séparément le résultat de chaque canal.
+
+1. **Vérifier la capture.** Sur le téléphone de Bastien, en mode avion, saisir une note, enregistrer un mémo et partager une URL. Fermer puis rouvrir l’application. Reconnecter au PC, interrompre puis relancer la synchronisation. Retrouver exactement trois éléments sur le PC, ouvrir le lien et retrouver le mémo en recherchant un mot prononcé. Relire la transcription et réécouter l’original.
+2. **Prouver la reprise.** Sur PC, convertir la note en tâche et épingler son prochain geste. Sur Android, le retrouver, marquer la tâche terminée et vérifier son état sur PC.
+3. **Prouver l’aller-retour des RDV.** Créer un RDV sur Android, puis vérifier heure et fuseau dans l’agenda du fournisseur. Déplacer ce RDV dans cet agenda et vérifier les deux appareils. Créer ensuite un deuxième RDV côté fournisseur, le supprimer depuis le PC et vérifier sa disparition partout. Refaire un cycle après une coupure et contrôler l’absence de doublon.
+4. **Prouver l’accès local et la récupération.** Faire lire une tâche à Orca, tester une écriture refusée puis autorisée, et restaurer une sauvegarde selon le contrôle ci-dessus.
+
+## Décisions pour Bastien
+
+- Bastien souhaite repérer dans ses SMS et messages WhatsApp les rendez-vous, les tâches et les informations à garder (adresse, code de porte). Bastien souhaite une analyse automatique de tous les messages reçus, sans partage manuel ni filtre par contact. Vérifier séparément sur son téléphone la couverture SMS et WhatsApp, y compris pour une conversation ouverte, en sourdine ou avec aperçu masqué. Documenter les cas manqués avant de conclure à une couverture complète. Tester PC éteint avec un message « rendez-vous demain à 9 h » : vérifier la date sur le Pixel dès réception, puis retrouver le même rendez-vous une seule fois sur le PC après synchronisation.
+- Pour les SMS et WhatsApp, conserver chaque élément utile avec un lien vers le message d’origine conservé dans Mon cerveau. Si un message produit plusieurs éléments, ils partagent la même copie. Les messages sans élément utile ne sont pas archivés.
+- Analyser les messages localement par défaut. Pour une analyse en ligne, afficher le message sélectionné et le service destinataire, puis demander un accord valable pour cet envoi uniquement. Vérifier avec deux messages fictifs que seul celui autorisé est transmis.
+
+- Bastien veut gérer ses RDV dans Mon cerveau sur les deux appareils. Il utilise Google/Gmail sur son téléphone. Le fournisseur d’agenda reste ouvert.
+- Les invitations structurées et les simples confirmations reçues par e-mail doivent apparaître automatiquement. Bastien reçoit ces messages chez Gmail, Yahoo, GMX et Proton. Sur le Pixel, l’application Gmail regroupe Gmail, Yahoo et GMX. Proton utilise Proton Mail. Sur PC, Bastien utilise Thunderbird, dont la configuration est partielle. Le test de réception sur le Pixel doit fonctionner indépendamment de Thunderbird. Pour le premier essai, lire localement les notifications des applications Gmail et Proton Mail. PC éteint, tester dans chacune des quatre boîtes une heure visible dans l’aperçu, une heure en fin de message et une invitation en pièce jointe. Comparer les messages envoyés aux notifications effectivement reçues et aux RDV détectés. Une notification identifiable comme confirmation mais sans date exploitable va dans « À confirmer ». Conserver le texte disponible en le signalant comme extrait. Une notification absente est un cas manqué. Les résultats guideront la décision de connecter directement certaines boîtes. Si la date est incertaine, afficher le message dans « À confirmer ». Bastien choisit la date avant l’ajout à l’agenda. Tester ces trois cas avec des messages fictifs.
+- Bastien valide la capture hors ligne et le transfert au retour à la maison, dès que le PC est joignable sur le même Wi-Fi.
+- Bastien souhaite le mémo audio et sa transcription recherchable dès la première version. Une demande explicite de Bastien autorise Orca à créer directement la tâche demandée. Orca confirme après enregistrement. Cette décision concerne la création de tâches par Orca.
+
+Bastien indique utiliser un Google Pixel 7 sous Android 17. Le compte agenda et la fréquence de disponibilité du PC restent à confirmer. Le premier essai sur les appareils de Bastien devra valider ces hypothèses. Bastien a validé le lancement. Les choix encore ouverts sont précisés avec lui au fil du cadrage.
