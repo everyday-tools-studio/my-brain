@@ -1,0 +1,3 @@
+Écris une note, dicte une idée ou partage un lien sur Android. Associe ton PC Linux sur le Wi-Fi de la maison pour retrouver tes captures et transcrire tes mémos français localement. Épingle une tâche pour la reprendre à ton bureau.
+
+Avec ton accord, le téléphone repère des rendez-vous et des tâches dans les SMS et les aperçus de notifications grâce à des règles en français. Les dates incertaines vont dans « À confirmer ». La détection dépend du contenu affiché par chaque application.

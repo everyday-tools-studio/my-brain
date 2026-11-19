@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#f5f3ec" />
+    <title>Mon cerveau</title>
+    <link rel="stylesheet" href="style.css" />
+    <script defer src="app.js"></script>
+  </head>
+  <body>
+    <header class="top">
+      <div class="top-inner">
+        <a class="brand" href="#inbox" aria-label="Mon cerveau, accueil"
+          ><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>Mon cerveau</a
+        >
+        <div class="top-tools">
+          <label class="search"
+            ><span data-icon="search"></span
+            ><input
+              id="query"
+              type="search"
+              placeholder="Rechercher"
+              aria-label="Rechercher dans tous les éléments"
+            /><kbd>/</kbd></label
+          ><button id="settings" class="icon-button" aria-label="Réglages" title="Réglages">
+            <span data-icon="settings"></span>
+          </button>
+        </div>
+      </div>
+    </header>
+    <div class="layout">
+      <nav class="nav" aria-label="Vues">
+        <div id="navigation"></div>
+        <button id="sync" hidden><span data-icon="sync"></span><span>Synchroniser</span></button
+        ><small id="sync-status" role="status"></small>
+      </nav>
+      <main>
+        <div class="heading">
+          <div class="date" id="today"></div>
+          <h1 id="heading">Boîte de réception</h1>
+        </div>
+        <section id="composer" class="composer" aria-label="Capture rapide">
+          <label for="capture">Capture rapide</label>
+          <textarea
+            id="capture"
+            rows="2"
+            placeholder="Une idée, une tâche, un lien…"
+            maxlength="65535"
+          ></textarea>
+          <div class="capture-bar">
+            <button id="record" class="soft">
+              <span data-icon="mic"></span><span id="record-text">Mémo vocal</span></button
+            ><button id="capture-save" class="primary">
+              <span data-icon="plus"></span>Enregistrer
+            </button>
+          </div>
+          <div id="audio-preview" hidden></div>
+        </section>
+        <section id="calendar" hidden aria-label="Calendrier">
+          <div class="month-nav">
+            <button id="prev" class="icon-button" aria-label="Mois précédent">
+              <span data-icon="left"></span>
+            </button>
+            <h2 id="month"></h2>
+            <button id="next" class="icon-button" aria-label="Mois suivant">
+              <span data-icon="right"></span>
+            </button>
+          </div>
+          <div id="month-grid" class="month-grid"></div>
+          <button id="reset-day" class="text-button" hidden>Afficher tout le mois</button>
+        </section>
+        <div class="section-head">
+          <h2 id="list-title">Derniers éléments</h2>
+          <button id="create" class="soft" hidden><span data-icon="plus"></span>Ajouter</button>
+        </div>
+        <div id="items" aria-live="polite"></div>
+      </main>
+      <aside>
+        <section class="focus">
+          <div class="focus-icon"><span data-icon="pin"></span></div>
+          <h2>Reprendre</h2>
+          <div id="focus"></div>
+        </section>
+        <section class="upcoming">
+          <div class="section-head">
+            <h2>Prochain rendez-vous</h2>
+            <span data-icon="event"></span>
+          </div>
+          <div id="upcoming"></div>
+        </section>
+      </aside>
+    </div>
+    <dialog id="editor">
+      <form id="edit-form">
+        <div class="dialog-head">
+          <h2 id="edit-heading">Modifier</h2>
+          <button class="icon-button" type="button" data-close aria-label="Fermer">
+            <span data-icon="close"></span>
+          </button>
+        </div>
+        <label
+          >Type<select id="kind">
+            <option value="note">Note</option>
+            <option value="task">Tâche</option>
+            <option value="event">Rendez-vous</option>
+            <option value="review">À confirmer</option>
+          </select></label
+        >
+        <label>Titre<input id="title" required maxlength="300" /></label>
+        <label id="time-label">Date et heure<input type="datetime-local" id="when" /></label>
+        <label><span id="body-label">Contenu</span><textarea id="body" rows="4"></textarea></label>
+        <div id="source"></div>
+        <div id="media"></div>
+        <div id="links"></div>
+        <button type="button" id="analyze" hidden class="soft">
+          <span data-icon="send"></span><span id="analyze-label">Analyser ce message…</span>
+        </button>
+        <div id="analysis-result" class="analysis" hidden></div>
+        <label id="pin-field" class="check"
+          ><input id="pinned" type="checkbox" />Épingler dans « Reprendre »</label
+        >
+        <div class="actions">
+          <button type="button" id="remove" class="text-button danger">Supprimer</button
+          ><button class="primary" id="commit" type="submit">Enregistrer</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="pairing" aria-labelledby="pair-heading">
+      <div class="dialog-head">
+        <h2 id="pair-heading">Associer le téléphone</h2>
+        <button type="button" class="icon-button" data-close aria-label="Fermer">
+          <span data-icon="close"></span>
+        </button>
+      </div>
+      <p>
+        Connectez le téléphone au même Wi-Fi que le PC. Le code autorise le téléphone à lire et modifier les
+        éléments de Mon cerveau.
+      </p>
+      <button type="button" id="pair-generate" class="primary">Créer un code d’association</button>
+      <div id="pair-instructions" hidden>
+        <img id="pair-qr" hidden alt="Code QR d’association au PC" />
+        <p id="pair-help"></p>
+        <details id="pair-details">
+          <summary>Afficher le code texte</summary>
+          <textarea
+            id="pair-code"
+            aria-label="Code d’association"
+            readonly
+            rows="4"
+            spellcheck="false"
+          ></textarea>
+          <button type="button" id="pair-copy" class="soft">Copier le code</button>
+        </details>
+        <p class="muted">
+          Gardez ce code entre vos appareils. Il reste valide après la fermeture de cette fenêtre.
+        </p>
+      </div>
+    </dialog>
+    <dialog id="consent">
+      <div class="dialog-head">
+        <h2 id="consent-title">Confirmer cette analyse ?</h2>
+        <button class="icon-button" data-close aria-label="Fermer">
+          <span data-icon="close"></span>
+        </button>
+      </div>
+      <p id="destination"></p>
+      <pre id="payload"></pre>
+      <div class="actions">
+        <button data-close class="soft">Annuler</button
+        ><button id="send" class="primary">Analyser ce message</button>
+      </div>
+    </dialog>
+    <dialog id="confirm-delete">
+      <h2>Supprimer cet élément ?</h2>
+      <p id="delete-title"></p>
+      <div class="actions">
+        <button data-close class="soft">Annuler</button
+        ><button id="delete-yes" class="primary">Supprimer</button>
+      </div>
+    </dialog>
+    <div id="status" role="status" hidden></div>
+  </body>
+</html>
