@@ -1,0 +1,68 @@
+name: Desktop and Android
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  desktop:
+    name: Desktop tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Prepare the Python environment
+        run: |
+          command -v openssl
+          command -v gpg
+          python3 -m venv .venv
+          .venv/bin/python -m pip install -r requirements.txt
+      - name: Run desktop and integration tests
+        run: .venv/bin/python -m unittest discover -s tests -v
+      - name: Check the shared interface
+        run: node --check web/app.js
+
+  android:
+    name: Android parser and unsigned APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Select JDK 17
+        run: |
+          echo "JAVA_HOME=${JAVA_HOME_17_X64}" >> "$GITHUB_ENV"
+          echo "${JAVA_HOME_17_X64}/bin" >> "$GITHUB_PATH"
+      - name: Run French extraction cases on the JVM
+        run: |
+          classes="$(mktemp -d)"
+          javac --release 11 -encoding UTF-8 -d "$classes" android/src/fr/moncerveau/app/Extract.java android/tests/ExtractTest.java
+          java -cp "$classes" fr.moncerveau.app.ExtractTest
+      - name: Select Android SDK 36 and Build Tools 36.0.0
+        run: |
+          sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          "$sdkmanager" --install "platforms;android-36" "build-tools;36.0.0"
+          sdk="$RUNNER_TEMP/selected-sdk"
+          mkdir -p "$sdk/platforms" "$sdk/build-tools"
+          # build.sh discovers the newest platform and tools under ANDROID_HOME.
+          # Expose only the chosen versions, independently of runner updates.
+          ln -s "$ANDROID_HOME/platforms/android-36/android.jar" "$sdk/platforms/android.jar"
+          mkdir "$sdk/build-tools/36.0.0"
+          cp -as "$ANDROID_HOME/build-tools/36.0.0/." "$sdk/build-tools/36.0.0/"
+          echo "ANDROID_HOME=$sdk" >> "$GITHUB_ENV"
+      - name: Build and check the unsigned APK
+        run: |
+          ./android/build.sh --unsigned
+          unzip -tq android/build/mon-cerveau-unsigned.apk
+          unzip -p android/build/mon-cerveau-unsigned.apk classes.dex > "$RUNNER_TEMP/app.dex"
+          test -s "$RUNNER_TEMP/app.dex"

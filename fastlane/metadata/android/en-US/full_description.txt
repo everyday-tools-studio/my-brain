@@ -1,0 +1,3 @@
+Write a note, record an idea or share a link on Android. Pair with your Linux PC over home Wi-Fi to search your captures and transcribe French voice memos locally. Pin one task to resume it at your desk.
+
+With permission, the phone can extract appointments and tasks from SMS and notification previews using French-language rules. Uncertain dates go into a review queue. Notification coverage depends on what the source app displays. The app interface is in French.
